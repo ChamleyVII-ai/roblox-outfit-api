@@ -17,9 +17,9 @@ app.get("/outfits/:userId", async (req, res) => {
 
         const data = await response.json();
 
-        const outfits = (data.data || []).filter(outfit =>
-            outfit.outfitType === "Avatar" && outfit.isEditable === true
-        );
+       const outfits = (data.data || []).filter(outfit =>
+    outfit.outfitType === "Avatar"
+);
 
         const ids = outfits.map(outfit => outfit.id).join(",");
 
