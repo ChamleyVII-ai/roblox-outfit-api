@@ -12,36 +12,49 @@ app.get("/outfits/:userId", async (req, res) => {
         const userId = req.params.userId;
 
         const response = await fetch(
-            `https://avatar.roblox.com/v2/avatar/users/${userId}/outfits?itemsPerPage=100&isEditable=true`
+            `https://avatar.roblox.com/v2/avatar/users/${userId}/outfits?itemsPerPage=100`
         );
 
         const data = await response.json();
 
-       const outfits = (data.data || []).filter(outfit =>
-    outfit.outfitType === "Avatar"
-);
+        const avatarOutfits = (data.data || []).filter(outfit =>
+            outfit.outfitType === "Avatar"
+        );
 
-        const ids = outfits.map(outfit => outfit.id).join(",");
+        const finalOutfits = [];
 
-        let thumbnails = {};
+        for (const outfit of avatarOutfits) {
+            let details = null;
 
-        if (ids.length > 0) {
-            const thumbResponse = await fetch(
-                `https://thumbnails.roblox.com/v1/users/outfits?userOutfitIds=${ids}&size=150x150&format=Png&isCircular=false`
-            );
+            try {
+                const detailResponse = await fetch(
+                    `https://avatar.roblox.com/v1/outfits/${outfit.id}/details`
+                );
 
-            const thumbData = await thumbResponse.json();
-
-            for (const thumb of thumbData.data || []) {
-                thumbnails[thumb.targetId] = thumb.imageUrl;
+                details = await detailResponse.json();
+            } catch (err) {
+                console.log("Details Fehler:", outfit.id, err.message);
             }
-        }
 
-        const finalOutfits = outfits.map(outfit => ({
-            id: outfit.id,
-            name: outfit.name,
-            image: thumbnails[outfit.id] || ""
-        }));
+            finalOutfits.push({
+                id: outfit.id,
+                name: outfit.name,
+                image: `rbxthumb://type=Outfit&id=${outfit.id}&w=420&h=420`,
+
+                avatarType: details?.playerAvatarType || null,
+
+                animations: {
+                    idle: details?.idleAnimationAssetId || 0,
+                    walk: details?.walkAnimationAssetId || 0,
+                    run: details?.runAnimationAssetId || 0,
+                    jump: details?.jumpAnimationAssetId || 0,
+                    fall: details?.fallAnimationAssetId || 0,
+                    climb: details?.climbAnimationAssetId || 0,
+                    swim: details?.swimAnimationAssetId || 0,
+                    mood: details?.moodAnimationAssetId || 0
+                }
+            });
+        }
 
         res.json({
             data: finalOutfits
