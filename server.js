@@ -17,8 +17,10 @@ const userId = req.params.userId;
 
     const data = await response.json();
 
-    const outfits = (data.data || []).filter(outfit =>
-        outfit.outfitType === "Avatar"
+   const outfits = (data.data || []).filter(outfit =>
+    outfit.outfitType === "Avatar" &&
+    outfit.isEditable === true
+);
     );
 
     const ids = outfits.map(outfit => outfit.id).join(",");
